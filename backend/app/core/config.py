@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # Gemini AI API Key
     GEMINI_API_KEY: Optional[str] = None
-    GEMINI_MODEL: str = "gemini-1.5-flash"
+    GEMINI_MODEL: str = "gemini-2.5-flash"
 
     # Application Settings
     APP_NAME: str = "Skylark Drones - monday.com BI Agent"
