@@ -17,7 +17,7 @@ from app.analytics.pipeline import compute_pipeline_metrics
 from app.analytics.sector import compute_sector_metrics
 from app.analytics.operations import compute_work_order_metrics
 from app.analytics.cross_board import compute_cross_board_analysis
-from app.analytics.leadership import compile_leadership_metrics
+from app.analytics.leadership import compile_leadership_metrics, generate_structured_leadership_update
 from app.agent.query_planner import QueryPlanner
 from app.agent.context_manager import context_manager, SessionContext
 from app.agent.prompts import INSIGHT_GENERATOR_SYSTEM_PROMPT, LEADERSHIP_UPDATE_SYSTEM_PROMPT
@@ -41,24 +41,7 @@ def generate_fallback_insights(query_plan: QueryPlan, metrics: Dict[str, Any]) -
     intent = query_plan.intent
 
     if intent == QueryIntent.LEADERSHIP_UPDATE:
-        pipeline = metrics.get("pipeline", {})
-        ops = metrics.get("operations", {})
-        sector = metrics.get("sector", {})
-        return (
-            f"**Executive Takeaway**: Total active pipeline stands at **${pipeline.get('total_pipeline_value', 0):,.2f}** "
-            f"across {pipeline.get('deal_count', 0)} deals. Operations are executing {ops.get('active_work_orders', 0)} active work orders "
-            f"with {ops.get('delayed_work_orders', 0)} delayed project(s).\n\n"
-            f"**Key Performance Highlights**:\n"
-            f"- Open Pipeline Value: **${pipeline.get('open_pipeline_value', 0):,.2f}**\n"
-            f"- Late-Stage Pipeline (Proposal/Negotiation/Won): **${pipeline.get('late_stage_pipeline_value', 0):,.2f}**\n"
-            f"- Top Performing Industry Sector: **{sector.get('top_performing_sector', 'N/A')}**\n"
-            f"- Total Operational Execution Value: **${ops.get('total_execution_value', 0):,.2f}**\n\n"
-            f"**Key Risks**:\n"
-            f"- {ops.get('delayed_work_orders', 0)} work order(s) currently experience operational bottlenecks.\n\n"
-            f"**Recommended Actions**:\n"
-            f"- Focus sales conversion efforts on late-stage pipeline in top sector ({sector.get('top_performing_sector', 'N/A')}).\n"
-            f"- Expedite clearance for delayed work orders to protect client relationships."
-        )
+        return generate_structured_leadership_update(metrics)
 
     if intent == QueryIntent.SECTOR_ANALYSIS:
         sector_name = query_plan.sector or "Selected Sectors"
@@ -164,6 +147,7 @@ class AgentOrchestrator:
             "sector": sector_res,
             "operations": operations_res,
             "cross_board": cross_board_res,
+            "data_quality": quality_report.model_dump(),
         }
 
         # Build Chart Data
